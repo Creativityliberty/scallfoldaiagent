@@ -1,193 +1,210 @@
 # 🧠 Agent IA Complet - Gemini + MCP + PocketFlow
 
-Agent IA de production avec architecture modulaire inspirée de PocketFlow, RRLA et le protocole MCP.
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Agent IA de production avec architecture modulaire inspirée de PocketFlow, RRLA et le protocole MCP. Intégration GitMCP pour charger automatiquement le contexte des repos GitHub.
+
+## ✨ Fonctionnalités
+
+- **🧠 Architecture PocketFlow**: Nodes modulaires avec contrat Shared (contexte, résultats, trace)
+- **🔄 Raisonnement RRLA**: Raisonnement, Réflexion, Logique, Action
+- **🔗 Protocole MCP**: Outils exposés via function calling
+- **📦 GitMCP Integration**: Charge automatiquement le contexte des repos GitHub
+- **⚡ Streaming SSE**: Réponses token-par-token en temps réel
+- **🎨 Interface Moderne**: UI dark avec chat, trace, et contrôles
+- **🛡️ Production-Ready**: Logging, retry, error handling, tests
+
+## 🚀 Démarrage Rapide
+
+```bash
+# 1. Cloner le repo
+git clone https://github.com/Creativityliberty/scallfoldaiagent.git
+cd scallfoldaiagent
+
+# 2. Installer les dépendances
+./install.sh
+
+# 3. Configurer la clé API
+cp .env.example .env
+# Éditer .env: GEMINI_API_KEY=votre_clé_ici
+
+# 4. Lancer le serveur
+uv run uvicorn backend.main:app --reload --port 8000
+```
+
+Ouvrir [http://localhost:8000](http://localhost:8000) 🎉
+
+## 🎯 Utilisation
+
+### 1. Charger un Repo GitHub
+```bash
+# Colle une URL dans l'interface
+github.com/username/repo
+# → Clique "📦 Charger Repo"
+# → ✅ Contexte chargé automatiquement
+```
+
+### 2. Poser des Questions
+```bash
+"Explique l'architecture de ce projet"
+"Quels sont les fichiers principaux?"
+"Comment fonctionne le système RRLA?"
+```
+
+### 3. Fonctionnalités Avancées
+- **Mode Streaming**: Cochez pour voir les réponses en temps réel
+- **Trace Debug**: Affichez les timings de chaque node
+- **Outils MCP**: Le serveur expose des outils via `/api/mcp/`
 
 ## 🏗️ Architecture
 
-- Backend: FastAPI + Python 3.11+
-- LLM: Google Gemini (streaming + function calling)
-- Orchestration: PocketFlow (Nodes + Shared contract)
-- Protocole: MCP (Model Context Protocol)
-- Frontend: HTML/JS/CSS vanilla (pas de Node requis)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         FRONTEND (Browser)                       │
+├─────────────────────────────────────────────────────────────────┤
+│  GitMCP Input → Chat Interface → Streaming Display → Debug Trace  │
+└─────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      BACKEND (FastAPI)                           │
+├─────────────────────────────────────────────────────────────────┤
+│  POST /api/gitmcp/fetch → MCP Tools → PocketFlow Orchestrator   │
+│  ↓                        ↓            ↓                          │
+│  GitMCPClient           MCPServer    RRLA Nodes                  │
+│  ↓                        ↓            ↓                          │
+│  Fetch llms.txt        Tool Calling  Perception → Reasoning     │
+│  README.md             Function Call  ↓           ↓              │
+└──────────────────────────────────────┼───────────┼──────────────┘
+                                       ↓           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      EXTERNAL APIs                               │
+├─────────────────────────────────────────────────────────────────┤
+│  gitmcp.io (Context) → Gemini API (LLM) → GitHub (Optional)     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Nodes PocketFlow
+
+1. **Perception**: Nettoyage et normalisation des entrées
+2. **Interprétation**: Détection d'intention et typage
+3. **Raisonnement (RRLA)**: Décomposition → Réflexion → Logique → Action
+4. **Synthèse**: Agrégation des résultats
+5. **Action**: Production de la réponse finale
+
+## 📦 Structure du Projet
 
 ```
-agent-ia-gemini-mcp/
-├─ pyproject.toml
-├─ .env.example
-├─ README.md
-├─ backend/
-│  ├─ main.py
-│  ├─ config.py
-│  ├─ core/
-│  │  ├─ shared.py
-│  │  ├─ orchestrator.py
-│  │  └─ base_node.py
-│  ├─ nodes/
+scallfoldaiagent/
+├─ 📄 README.md                 # Documentation
+├─ 📄 QUICKSTART.md            # Guide rapide
+├─ 📄 GITMCP_INTEGRATION.md    # Détails GitMCP
+├─ 📄 ARCHITECTURE_GITMCP.md   # Diagrammes
+├─ 📄 CHANGES.md               # Historique
+├─ 🚀 install.sh               # Script d'installation
+├─ ⚙️ pyproject.toml           # Dépendances
+├─ 🔧 .env.example             # Variables d'environnement
+├─ 🚫 .gitignore               # Fichiers ignorés
+│
+├─ 🖥️ backend/                 # API FastAPI
+│  ├─ main.py                  # Point d'entrée
+│  ├─ config.py                # Configuration Pydantic
+│  ├─ core/                    # Architecture PocketFlow
+│  │  ├─ shared.py             # Contrat Shared
+│  │  ├─ base_node.py          # Interface Node
+│  │  └─ orchestrator.py       # Coordinateur
+│  ├─ nodes/                   # Implémentations RRLA
 │  │  ├─ perception.py
 │  │  ├─ interpretation.py
 │  │  ├─ reasoning.py
 │  │  ├─ synthesis.py
 │  │  ├─ action.py
 │  │  └─ feedback.py
-│  ├─ llm/
+│  ├─ llm/                     # Client Gemini
 │  │  ├─ gemini_client.py
 │  │  ├─ prompt_builder.py
 │  │  └─ token_counter.py
-│  ├─ mcp/
+│  ├─ mcp/                     # Protocole MCP
 │  │  ├─ server.py
 │  │  ├─ tools.py
 │  │  └─ schemas.py
-│  ├─ memory/
+│  ├─ integrations/            # Intégrations externes
+│  │  └─ gitmcp.py             # Client GitMCP
+│  ├─ memory/                  # Stockage (optionnel)
 │  │  ├─ vector_store.py
 │  │  ├─ graph_memory.py
 │  │  └─ context_manager.py
-│  └─ utils/
+│  └─ utils/                   # Utilitaires
 │     ├─ logger.py
 │     └─ validators.py
-├─ frontend/
-│  ├─ index.html
-│  ├─ app.js
-│  └─ styles.css
-└─ tests/
+│
+├─ 🌐 frontend/                # Interface web
+│  ├─ index.html               # Page principale
+│  ├─ app.js                   # Logique JavaScript
+│  └─ styles.css               # Styles modernes
+│
+└─ 🧪 tests/                   # Tests unitaires
    ├─ test_orchestrator.py
    ├─ test_nodes.py
    └─ test_mcp.py
 ```
 
-## 🚀 Démarrage Rapide
+## 🔗 Endpoints API
 
-1) Installation
-
-```bash
-# Installer uv (gestionnaire Python ultra-rapide)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Aller dans le dossier
-cd agent-ia-gemini-mcp
-
-# Créer l'environnement virtuel
-uv venv
-
-# Installer les dépendances
-uv sync
-```
-
-2) Configuration
-
-```bash
-# Copier le template .env
-cp .env.example .env
-# Ouvrir .env et définir votre clé
-# GEMINI_API_KEY=your_key_here
-```
-
-3) Lancer
-
-```bash
-# Activer l'environnement
-source .venv/bin/activate        # Linux/Mac
-# .venv\\Scripts\\activate       # Windows
-
-# Démarrer l'API (auto-reload)
-uv run uvicorn backend.main:app --reload --port 8000
-```
-
-Ouvrir http://localhost:8000
-
-## 📋 Fonctionnalités
-
-- Perception: Nettoyage et normalisation des entrées
-- Interprétation: Détection d'intention et typage de tâche
-- Raisonnement (RRLA): Décomposition, réflexion, logique, action
-- Synthèse: Agrégation des résultats
-- Action: Production de la réponse finale
-- SSE Streaming: Token-par-token en temps réel
-- MCP Server: Outils exposés via protocole
-- Traçabilité: Trace complète de chaque exécution
-
-## 🎯 Endpoints API
-
-- GET  /                    – Interface web
-- POST /api/chat            – Chat REST (non-streaming)
-- GET  /api/stream          – Chat SSE (streaming)
-- GET  /api/mcp/info        – Info serveur MCP
-- GET  /api/mcp/tools       – Liste des outils MCP
-- POST /api/mcp/call        – Appel d'un outil MCP
-- GET  /health              – Health check
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/` | GET | Interface web |
+| `/api/chat` | POST | Chat REST |
+| `/api/stream` | GET | Chat SSE (streaming) |
+| `/api/gitmcp/fetch` | POST | Charger repo GitHub |
+| `/api/mcp/tools` | GET | Lister outils MCP |
+| `/api/mcp/call` | POST | Appeler outil MCP |
+| `/health` | GET | Health check |
 
 ## 🧪 Tests
 
 ```bash
-uv run pytest tests/ -v --cov=backend
+# Lancer tous les tests
+uv run pytest tests/ -v
+
+# Avec coverage
+uv run pytest tests/ --cov=backend
+
+# Tests MCP uniquement
+uv run pytest tests/test_mcp.py -v
 ```
 
-Les tests mockent l'API Gemini pour éviter tout appel réseau.
+## 📚 Documentation
 
-## 📚 Notes d'Architecture
+- **[QUICKSTART.md](./QUICKSTART.md)** - Guide de démarrage (3 min)
+- **[GITMCP_INTEGRATION.md](./GITMCP_INTEGRATION.md)** - Intégration GitMCP
+- **[ARCHITECTURE_GITMCP.md](./ARCHITECTURE_GITMCP.md)** - Diagrammes système
+- **[CHANGES.md](./CHANGES.md)** - Historique des modifications
 
-- RRLA
-  - R – Raisonnement: Décomposition du problème
-  - R – Réflexion: Évaluation des options
-  - L – Logique: Chaînage d'inférences
-  - A – Action: Prise de décision
-- MCP
-  - Outils exposés via `backend/mcp/server.py`
-  - Exemple: `search_memory`
+## 🤝 Contribution
 
-### Shared Contract (PocketFlow)
-
-Toutes les données transitent par le `Shared` store:
-
-```python
-shared.set_context("user_input", text)
-shared.set_result("reasoning", decision)
-shared.add_trace(entry)
-```
-
-## 🛠️ Développement
-
-Ajouter un Node
-
-```python
-# backend/nodes/mon_node.py
-from backend.core.base_node import BaseNode
-
-class MonNode(BaseNode):
-    def __init__(self):
-        super().__init__("mon_node")
-    async def exec(self, input_data):
-        return {"result": "..."}
-```
-
-Enregistrer dans l'orchestrateur si nécessaire.
-
-Ajouter un Outil MCP
-
-```python
-from backend.mcp.server import mcp_server, MCPTool
-
-async def mon_outil(param: str) -> dict:
-    return {"resultat": f"Traité: {param}"}
-
-mcp_server.register_tool(MCPTool(
-    name="mon_outil",
-    description="Description de l'outil",
-    input_schema={
-        "type": "object",
-        "properties": {"param": {"type": "string"}}
-    },
-    handler=mon_outil
-))
-```
-
-## ✅ Production-Ready
-
-- Retry logic et streaming pour Gemini
-- Orchestrateur modulaire
-- Lazy-init du client LLM (tests sans env vars)
-- Logging structuré
-- Tests unitaires avec mocks
+1. Fork le projet
+2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
 
 ## 📄 Licence
 
-MIT
+Distribué sous licence MIT. Voir `LICENSE` pour plus d'informations.
+
+## 🙏 Remerciements
+
+- **PocketFlow** pour l'architecture modulaire
+- **GitMCP** pour l'intégration de contexte GitHub
+- **Google Gemini** pour le modèle de langage
+- **FastAPI** pour le framework web
+
+## 📞 Contact
+
+Créé par [Creativityliberty](https://github.com/Creativityliberty)
+
+---
+
+**⭐ Star ce repo si vous trouvez ça utile!**
