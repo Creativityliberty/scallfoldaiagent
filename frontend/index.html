@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 Agent IA - Gemini + MCP</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧠 Agent IA Complet</h1>
+      <p class="subtitle">Gemini + MCP + PocketFlow</p>
+    </header>
+
+    <main class="chat-container">
+      <div id="messages" class="messages"></div>
+      
+      <div class="gitmcp-section">
+        <input 
+          id="gitmcp-url" 
+          type="text" 
+          placeholder="Colle une URL GitHub ou GitMCP... (ex: github.com/user/repo)"
+          autocomplete="off"
+        />
+        <button id="gitmcp-btn" class="btn-secondary">📦 Charger Repo</button>
+        <span id="gitmcp-status" class="gitmcp-status"></span>
+      </div>
+      
+      <form id="chat-form" class="input-form">
+        <input 
+          id="user-input" 
+          type="text" 
+          placeholder="Pose une question... (Shift+Enter pour streaming)"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" class="btn-primary">Envoyer</button>
+      </form>
+
+      <div class="controls">
+        <label>
+          <input type="checkbox" id="stream-mode" />
+          Mode streaming (SSE)
+        </label>
+        <label>
+          <input type="checkbox" id="show-trace" />
+          Afficher la trace
+        </label>
+      </div>
+    </main>
+
+    <aside id="debug-panel" class="debug-panel hidden">
+      <h3>🔍 Debug Trace</h3>
+      <pre id="trace-output"></pre>
+    </aside>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
