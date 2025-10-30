@@ -1,7 +1,7 @@
 [project]
 name = "agent-ia-gemini-mcp"
-version = "0.1.0"
-description = "Agent IA complet avec Gemini, MCP et PocketFlow"
+version = "2.0.0"
+description = "Agent IA complet avec Gemini, MCP, PocketFlow et agents spécialisés"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",
@@ -19,6 +19,8 @@ dependencies = [
     "loguru>=0.7.0",
     "tenacity>=8.5.0",
     "tiktoken>=0.7.0",
+    "beautifulsoup4>=4.12.0",
+    "pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]

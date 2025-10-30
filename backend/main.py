@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from typing import AsyncGenerator
+from contextlib import asynccontextmanager
 import uuid
 from loguru import logger
 
@@ -12,13 +13,61 @@ from .core.orchestrator import Orchestrator
 from .core.shared import Shared
 from .llm.gemini_client import GeminiClient
 from .mcp import mcp_server
+from .agents import LeadGeneratorAgent, SocialMediaManagerAgent, WordPressBloggerAgent
 
 # Config
 settings = get_settings()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler."""
+    # Startup
+    logger.info("🚀 Agent IA Backend starting...")
+    logger.info(f"📦 Model: {settings.gemini_model}")
+    logger.info(f"🔧 MCP Tools: {len(mcp_server.tools)}")
+    
+    # Initialize agents
+    app.state.agents = {}
+    
+    if settings.lead_gen_enabled:
+        app.state.agents["lead_generator"] = LeadGeneratorAgent(
+            orchestrator=orchestrator,
+            mcp_server=mcp_server,
+            max_results=settings.lead_gen_max_results
+        )
+        logger.info("✓ Lead Generator Agent initialized")
+    
+    if settings.social_media_enabled:
+        app.state.agents["social_media"] = SocialMediaManagerAgent(
+            orchestrator=orchestrator,
+            mcp_server=mcp_server,
+            default_tone=settings.default_tone
+        )
+        logger.info("✓ Social Media Manager Agent initialized")
+    
+    if settings.wordpress_enabled:
+        app.state.agents["wordpress"] = WordPressBloggerAgent(
+            orchestrator=orchestrator,
+            mcp_server=mcp_server,
+            wordpress_url=settings.wordpress_url,
+            target_word_count=settings.target_word_count,
+            min_seo_score=settings.min_seo_score
+        )
+        logger.info("✓ WordPress Blogger Agent initialized")
+    
+    logger.info(f"🤖 {len(app.state.agents)} agents initialized")
+    logger.info(f"🌐 Server: {settings.host}:{settings.port}")
+    
+    yield
+    
+    # Shutdown
+    logger.info("👋 Agent IA Backend shutting down...")
+
 app = FastAPI(
     title="Agent IA - Gemini + MCP + PocketFlow",
-    version="1.0.0",
-    description="Agent IA complet avec architecture RRLA et protocole MCP"
+    version="2.0.0",
+    description="Agent IA complet avec architecture RRLA, protocole MCP et agents spécialisés",
+    lifespan=lifespan
 )
 
 # CORS
@@ -187,6 +236,81 @@ async def mcp_call(req: Request):
         # Don't expose internal error details to external users
         raise HTTPException(500, "Tool execution error")
 
+@app.get("/api/agents")
+def list_agents():
+    """List all available agents."""
+    agents_info = []
+    for name, agent in app.state.agents.items():
+        agents_info.append(agent.get_info())
+    
+    return JSONResponse({
+        "agents": agents_info,
+        "count": len(agents_info)
+    })
+
+@app.post("/api/agents/{agent_name}/execute")
+async def execute_agent(agent_name: str, request: Request):
+    """
+    Execute a specific agent with task parameters.
+    
+    Args:
+        agent_name: Name of the agent (lead_generator, social_media, wordpress)
+        
+    Body:
+        Task-specific parameters
+    """
+    try:
+        if agent_name not in app.state.agents:
+            raise HTTPException(404, f"Agent '{agent_name}' not found")
+        
+        payload = await request.json()
+        agent = app.state.agents[agent_name]
+        
+        logger.info(f"Executing agent: {agent_name}")
+        result = await agent.execute(payload)
+        
+        return JSONResponse(result)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Agent execution error: {e}", exc_info=True)
+        raise HTTPException(500, f"Agent execution failed: {str(e)}")
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    """Agent management dashboard."""
+    dashboard_path = frontend_dir / "agent-dashboard.html"
+    if dashboard_path.exists():
+        return FileResponse(dashboard_path)
+    return HTMLResponse("""
+        <html>
+            <head><title>Agent Dashboard</title></head>
+            <body>
+                <h1>Agent Dashboard</h1>
+                <p>Dashboard interface is being developed.</p>
+                <p><a href="/">Back to main interface</a></p>
+            </body>
+        </html>
+    """)
+
+@app.get("/wordpress", response_class=HTMLResponse)
+async def wordpress_ui():
+    """WordPress management interface."""
+    wordpress_path = frontend_dir / "wordpress-dashboard.html"
+    if wordpress_path.exists():
+        return FileResponse(wordpress_path)
+    return HTMLResponse("""
+        <html>
+            <head><title>WordPress Dashboard</title></head>
+            <body>
+                <h1>WordPress Dashboard</h1>
+                <p>WordPress interface is being developed.</p>
+                <p><a href="/">Back to main interface</a></p>
+            </body>
+        </html>
+    """)
+
 @app.get("/api/pipeline/info")
 def pipeline_info():
     """Informations sur le pipeline d'orchestration."""
@@ -205,8 +329,21 @@ def health():
 @app.get("/api/stats")
 def stats():
     """Statistiques globales du système."""
+    agents_stats = {}
+    for name, agent in app.state.agents.items():
+        agents_stats[name] = {
+            "description": agent.description,
+            "tools": agent.tools
+        }
+    
     return {
+        "version": "2.0.0",
         "orchestrator": orchestrator.get_pipeline_info(),
+        "agents": {
+            "enabled": list(app.state.agents.keys()),
+            "count": len(app.state.agents),
+            "details": agents_stats
+        },
         "mcp": {
             "server_name": mcp_server.name,
             "version": mcp_server.version,
@@ -215,23 +352,12 @@ def stats():
         "config": {
             "model": settings.gemini_model,
             "max_context": settings.max_context_length,
-            "debug": settings.debug
+            "debug": settings.debug,
+            "wordpress_enabled": settings.wordpress_enabled,
+            "lead_gen_enabled": settings.lead_gen_enabled,
+            "social_media_enabled": settings.social_media_enabled
         }
     }
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    logger.info("🚀 Agent IA Backend starting...")
-    logger.info(f"📦 Model: {settings.gemini_model}")
-    logger.info(f"🔧 MCP Tools: {len(mcp_server.tools)}")
-    logger.info(f"🧠 Pipeline Nodes: {len(orchestrator.pipeline)}")
-    logger.info(f"🌐 Server: {settings.host}:{settings.port}")
-
-# Shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("👋 Agent IA Backend shutting down...")
 
 if __name__ == "__main__":
     import uvicorn

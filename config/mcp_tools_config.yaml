@@ -1,0 +1,162 @@
+# MCP Tools Configuration
+# Configure behavior for specialized MCP tools
+
+# Web Scraping Tools
+web_scraping:
+  google_maps:
+    enabled: true
+    api_key: ""  # Google Places API key
+    max_results_per_query: 50
+    fields: ["name", "address", "phone", "website", "rating", "reviews"]
+    cache_results: true
+    cache_duration_hours: 24
+  
+  email_extraction:
+    enabled: true
+    methods: ["page_scan", "api_lookup"]
+    confidence_threshold: 0.7
+    validate_emails: true
+  
+  lead_enrichment:
+    enabled: true
+    sources: ["clearbit", "hunter", "manual"]
+    timeout_seconds: 30
+    
+# Social Media Tools  
+social_media:
+  post_generation:
+    enabled: true
+    max_length:
+      twitter: 280
+      linkedin: 3000
+      instagram: 2200
+      facebook: 63206
+    
+  hashtag_research:
+    enabled: true
+    sources: ["trending", "competitor", "manual"]
+    max_hashtags: 30
+    relevance_threshold: 0.7
+  
+  image_generation:
+    enabled: true
+    provider: "dalle"  # dalle, midjourney, stable-diffusion
+    dalle:
+      model: "dall-e-3"
+      size: "1024x1024"
+      quality: "standard"
+    style_presets:
+      - "professional"
+      - "modern"
+      - "minimalist"
+      - "vibrant"
+  
+  content_calendar:
+    enabled: true
+    default_duration_days: 30
+    posts_per_day: 2
+    platforms: ["twitter", "linkedin", "instagram"]
+    
+# WordPress Tools
+wordpress:
+  keyword_research:
+    enabled: true
+    tools: ["google_keyword_planner", "semrush", "manual"]
+    min_search_volume: 100
+    max_difficulty: 70
+    
+  seo_optimization:
+    enabled: true
+    target_keyword_density: 2.5
+    min_readability_score: 60
+    check_meta_description: true
+    check_title_length: true
+    optimize_headings: true
+  
+  image_tools:
+    stock_images:
+      enabled: true
+      provider: "unsplash"  # unsplash, pexels, pixabay
+      api_key: ""
+      search_limit: 20
+    
+    image_optimization:
+      enabled: true
+      max_width: 1200
+      quality: 85
+      format: "webp"  # webp, jpg, png
+      compression: "medium"
+  
+  article_generation:
+    enabled: true
+    include_introduction: true
+    include_conclusion: true
+    include_faq: true
+    section_min_words: 200
+    section_max_words: 500
+    
+# Content Generation Tools
+content:
+  text_generation:
+    enabled: true
+    model: "gemini-1.5-flash"
+    temperature: 0.7
+    max_tokens: 4096
+    
+  summarization:
+    enabled: true
+    max_summary_length: 200
+    style: "concise"  # concise, detailed, bullet
+    
+  headline_generation:
+    enabled: true
+    count: 10
+    styles: ["engaging", "informative", "professional"]
+    
+  outline_generation:
+    enabled: true
+    min_sections: 3
+    max_sections: 8
+    detail_level: "medium"  # basic, medium, detailed
+
+# General Tool Settings
+general:
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
+  
+  caching:
+    enabled: true
+    cache_directory: "./.cache"
+    default_ttl_hours: 24
+  
+  error_handling:
+    retry_on_failure: true
+    max_retries: 3
+    retry_delay_seconds: 5
+    fallback_enabled: true
+  
+  logging:
+    log_tool_calls: true
+    log_level: "INFO"
+    save_tool_outputs: false
+    
+# API Keys (can also be set via environment variables)
+api_keys:
+  google_places: ""
+  dalle: ""
+  unsplash: ""
+  clearbit: ""
+  hunter: ""
+  semrush: ""
+  
+# Timeouts & Limits
+timeouts:
+  default_timeout: 30  # seconds
+  long_running_timeout: 300  # seconds
+  
+limits:
+  max_concurrent_tools: 5
+  max_tool_output_size_mb: 10
+  max_batch_size: 100

@@ -56,3 +56,13 @@ htmlcov/
 data/
 *.db
 *.sqlite
+
+# Output directories
+output_leads/
+output_social_media/
+output_blog_articles/
+output/
+backups/
+
+# Cache
+.cache/
