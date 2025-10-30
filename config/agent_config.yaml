@@ -1,0 +1,90 @@
+# Agent Configuration
+# Configure behavior for each agent
+
+agents:
+  lead_generator:
+    enabled: true
+    max_results: 50
+    default_location: "United States"
+    qualification:
+      min_score: 70
+      require_website: true
+      require_email: false
+    output:
+      format: "json"  # json, csv, excel
+      directory: "./output_leads"
+      auto_export: true
+    
+  social_media_manager:
+    enabled: true
+    default_tone: "professional"
+    platforms:
+      - twitter
+      - linkedin
+      - instagram
+      - facebook
+    posting_schedule:
+      timezone: "America/New_York"
+      optimal_times:
+        twitter: ["09:00", "13:00", "17:00"]
+        linkedin: ["08:00", "12:00", "17:00"]
+        instagram: ["11:00", "15:00", "19:00"]
+    hashtags:
+      max_per_post: 5
+      research_enabled: true
+    output:
+      directory: "./output_social_media"
+      save_images: true
+    
+  wordpress_blogger:
+    enabled: true
+    wordpress_url: ""  # Set your WordPress site URL
+    api_credentials:
+      username: ""
+      application_password: ""
+    content:
+      default_word_count: 1800
+      min_word_count: 1000
+      max_word_count: 3000
+      default_tone: "professional"
+      include_images: true
+      images_per_article: 4
+    seo:
+      enable_yoast: true
+      min_score: 70
+      keyword_density_target: 2.5
+      readability_target: "easy"
+    publishing:
+      auto_publish: false  # Set to true to auto-publish
+      default_status: "draft"  # draft, publish, pending
+      default_category: "Uncategorized"
+      enable_comments: true
+    output:
+      directory: "./output_blog_articles"
+      save_html: true
+      save_markdown: true
+
+# Global Settings
+global:
+  batch_processing:
+    max_concurrent: 3
+    retry_on_failure: true
+    max_retries: 3
+    delay_between_batches: 5  # seconds
+  
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
+  
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    save_to_file: true
+    log_directory: "./logs"
+    max_file_size_mb: 10
+    backup_count: 5
+  
+  notifications:
+    enabled: false
+    email: ""
+    webhook_url: ""

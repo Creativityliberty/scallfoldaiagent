@@ -1,0 +1,153 @@
+# WordPress Configuration
+# Detailed settings for WordPress content creation and publishing
+
+wordpress:
+  # Connection Settings
+  site_url: ""  # Your WordPress site URL (e.g., https://mysite.com)
+  api_base: "/wp-json/wp/v2"  # WordPress REST API base path
+  
+  # Authentication
+  auth:
+    method: "application_password"  # application_password, jwt, oauth
+    username: ""
+    application_password: ""  # Generate from WordPress User Profile
+    # For JWT:
+    jwt_secret: ""
+    # For OAuth:
+    client_id: ""
+    client_secret: ""
+  
+  # Content Settings
+  content:
+    default_author_id: 1
+    default_category_ids: []  # List of category IDs
+    default_tag_ids: []  # List of tag IDs
+    default_format: "standard"  # standard, aside, gallery, link, image, quote, status, video, audio, chat
+    
+    # Article Structure
+    structure:
+      include_table_of_contents: true
+      include_faq_section: true
+      include_conclusion: true
+      min_sections: 4
+      max_sections: 8
+    
+    # Media
+    featured_image:
+      enabled: true
+      source: "dalle"  # dalle, unsplash, local
+      width: 1200
+      height: 630
+      quality: 85
+    
+    inline_images:
+      enabled: true
+      count: 4
+      source: "unsplash"
+      optimize: true
+      max_width: 800
+  
+  # SEO Settings
+  seo:
+    # Yoast SEO
+    yoast:
+      enabled: true
+      focus_keyword_count: 1
+      meta_description_length: 155
+      title_separator: "|"
+    
+    # RankMath
+    rankmath:
+      enabled: false
+      schema_type: "Article"
+    
+    # General SEO
+    general:
+      generate_meta_description: true
+      optimize_title: true
+      add_alt_text: true
+      internal_links_count: 3
+      external_links_count: 2
+  
+  # Publishing Settings
+  publishing:
+    default_status: "draft"  # draft, pending, publish
+    schedule_enabled: false
+    schedule_offset_hours: 24
+    
+    # Categories & Tags
+    auto_create_categories: false
+    auto_create_tags: true
+    max_tags: 10
+    
+    # Comments & Pingbacks
+    enable_comments: true
+    enable_pingbacks: false
+    
+    # Visibility
+    sticky: false
+    password_protected: false
+  
+  # Templates
+  templates:
+    # Article Templates
+    article:
+      header: |
+        <!-- Article Header -->
+      footer: |
+        <!-- Article Footer -->
+        <p><em>This article was generated with AI assistance.</em></p>
+    
+    # Post Meta
+    custom_fields:
+      reading_time: true
+      word_count: true
+      last_updated: true
+  
+  # Backup & Export
+  backup:
+    enabled: true
+    local_copy: true
+    backup_directory: "./backups/wordpress"
+  
+  # Performance
+  performance:
+    cache_enabled: false
+    lazy_load_images: true
+    minify_html: false
+  
+  # Analytics
+  analytics:
+    google_analytics_id: ""
+    track_conversions: false
+    custom_events: []
+
+# Bulk Publishing
+bulk:
+  enabled: true
+  batch_size: 5
+  delay_between_posts: 10  # seconds
+  stop_on_error: false
+  
+# Content Variations
+variations:
+  generate_multiple: false
+  count: 1
+  variation_types:
+    - "title"
+    - "introduction"
+    - "conclusion"
+
+# Quality Control
+quality:
+  plagiarism_check: false
+  grammar_check: true
+  readability_check: true
+  fact_check: false
+  
+  # Minimum Requirements
+  requirements:
+    min_word_count: 1000
+    min_seo_score: 70
+    min_readability_score: 60
+    max_keyword_density: 3.0
