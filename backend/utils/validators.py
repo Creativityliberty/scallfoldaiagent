@@ -105,6 +105,10 @@ def validate_token_count(tokens: int, max_tokens: int = 100000) -> int:
 def sanitize_html(text: str) -> str:
     """
     Nettoie le HTML d'un texte (basique).
+    
+    WARNING: This is a basic sanitization function. For production use,
+    consider using a proper HTML parser like 'bleach' or 'html.parser'.
+    Regex-based HTML sanitization can miss edge cases.
 
     Args:
         text: Texte à nettoyer
@@ -112,14 +116,14 @@ def sanitize_html(text: str) -> str:
     Returns:
         Texte nettoyé
     """
-    # Remove HTML tags
-    text = re.sub(r'<[^>]+>', '', text)
-
-    # Remove JavaScript - improved regex to handle spaces before closing bracket
-    text = re.sub(r'<script\b[^>]*>.*?</script\s*>', '', text, flags=re.DOTALL | re.IGNORECASE)
-
-    # Remove inline JavaScript
+    # Remove JavaScript blocks - handle whitespace in closing tags
+    text = re.sub(r'<script[^>]*>.*?</script\s*>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Remove inline JavaScript event handlers
     text = re.sub(r'on\w+\s*=\s*["\'].*?["\']', '', text, flags=re.IGNORECASE)
+    
+    # Remove HTML tags (done last to catch any remaining tags)
+    text = re.sub(r'<[^>]+>', '', text)
 
     return text.strip()
 

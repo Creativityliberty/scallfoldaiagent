@@ -167,6 +167,11 @@ async def mcp_call(req: Request):
             raise HTTPException(400, "Missing 'tool' parameter")
 
         result = await mcp_server.call_tool(tool_name, arguments)
+        # Sanitize error messages to avoid exposing internal details
+        if isinstance(result, dict) and not result.get("success", True):
+            # Log the full error internally but return a generic message
+            logger.error(f"Tool {tool_name} failed: {result.get('error')}")
+            return JSONResponse({"success": False, "error": "Tool execution failed"})
         return JSONResponse(result)
 
     except ValueError as e:
