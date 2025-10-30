@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Callable, Awaitable
 from dataclasses import dataclass
 import json
 from loguru import logger
@@ -9,25 +9,25 @@ class MCPTool:
     name: str
     description: str
     input_schema: Dict[str, Any]
-    handler: Any  # Callable async
+    handler: Callable[..., Awaitable[Any]]
 
 class MCPServer:
     """
     Implémentation MCP (Model Context Protocol).
     Expose des outils que l'agent peut appeler via function calling.
     """
-    
+
     def __init__(self, name: str, version: str):
         self.name = name
         self.version = version
         self.tools: Dict[str, MCPTool] = {}
         logger.info(f"MCP Server initialized: {name} v{version}")
-    
+
     def register_tool(self, tool: MCPTool) -> None:
         """Enregistre un nouvel outil."""
         self.tools[tool.name] = tool
         logger.info(f"MCP tool registered: {tool.name}")
-    
+
     def get_tools_schema(self) -> List[Dict[str, Any]]:
         """Retourne les schémas pour Gemini function calling."""
         return [
@@ -38,22 +38,22 @@ class MCPServer:
             }
             for tool in self.tools.values()
         ]
-    
+
     async def call_tool(self, name: str, arguments: Dict[str, Any]) -> Any:
         """Exécute un outil MCP."""
         if name not in self.tools:
             raise ValueError(f"Unknown tool: {name}")
-        
+
         tool = self.tools[name]
         logger.info(f"Calling MCP tool: {name} with args: {arguments}")
-        
+
         try:
             result = await tool.handler(**arguments)
             return {"success": True, "result": result}
         except Exception as e:
             logger.error(f"MCP tool error ({name}): {e}")
             return {"success": False, "error": str(e)}
-    
+
     def get_server_info(self) -> Dict[str, Any]:
         """Info du serveur MCP."""
         return {
@@ -67,31 +67,12 @@ class MCPServer:
             }
         }
 
-# Instanciation globale
-mcp_server = MCPServer(
-    name="agent-ia-mcp",
-    version="1.0.0"
-)
-
-# Exemple d'outil MCP
-async def search_memory(query: str, top_k: int = 5) -> List[Dict]:
-    """Recherche sémantique dans la mémoire."""
-    # Implémentation simplifiée
-    return [
-        {"content": f"Résultat {i+1} pour: {query}", "score": 0.9 - i*0.1}
-        for i in range(top_k)
-    ]
-
-mcp_server.register_tool(MCPTool(
-    name="search_memory",
-    description="Recherche sémantique dans la mémoire de l'agent",
-    input_schema={
-        "type": "object",
-        "properties": {
-            "query": {"type": "string", "description": "Requête de recherche"},
-            "top_k": {"type": "integer", "description": "Nombre de résultats", "default": 5}
-        },
-        "required": ["query"]
-    },
-    handler=search_memory
-))
+    def list_tools(self) -> List[Dict[str, str]]:
+        """Liste tous les outils disponibles."""
+        return [
+            {
+                "name": tool.name,
+                "description": tool.description
+            }
+            for tool in self.tools.values()
+        ]

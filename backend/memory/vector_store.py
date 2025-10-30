@@ -1,54 +1,137 @@
-import os
-from typing import List, Dict, Tuple
+from typing import List, Dict, Any, Tuple
+import numpy as np
+from loguru import logger
+
+try:
+    import faiss
+    FAISS_AVAILABLE = True
+except ImportError:
+    FAISS_AVAILABLE = False
+    logger.warning("FAISS not available, using simple similarity")
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    logger.warning("sentence-transformers not available, using dummy embeddings")
 
 class VectorStore:
-    """Vector store with optional dependencies for compatibility."""
+    """
+    Store vectoriel pour recherche sémantique.
+    Utilise FAISS + sentence-transformers pour les embeddings.
+    """
 
-    def __init__(self, dim: int = 768):
-        self.dim = dim
-        self.docs: List[str] = []
-        self._initialized = False
+    def __init__(self, dimension: int = 768):
+        self.dimension = dimension
+        self.documents: List[Dict[str, Any]] = []
 
-        # Check optional dependencies
-        try:
-            import faiss  # noqa
-            import numpy as np  # noqa
-            self._faiss_available = True
-            self._numpy_available = True
-        except ImportError:
-            self._faiss_available = False
-            self._numpy_available = False
+        # Encoder pour les embeddings
+        if SENTENCE_TRANSFORMERS_AVAILABLE:
+            self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
+            self.dimension = 384  # Dimension du modèle all-MiniLM-L6-v2
+        else:
+            self.encoder = None
 
-        # Check sentence-transformers (now optional)
-        try:
-            import sentence_transformers  # noqa
-            self._sentence_transformers_available = True
-        except ImportError:
-            self._sentence_transformers_available = False
+        # Index FAISS
+        if FAISS_AVAILABLE:
+            self.index = faiss.IndexFlatL2(self.dimension)
+        else:
+            self.index = None
+            self.vectors: List[np.ndarray] = []
 
-    def add_texts(self, texts: List[str]) -> None:
-        """Add texts to the store."""
-        if not self._faiss_available:
-            # Fallback: just store as simple list
-            self.docs.extend(texts)
-            return
+        logger.info(f"VectorStore initialized (dim={self.dimension})")
 
-        # TODO: Implement FAISS indexing when available
-        self.docs.extend(texts)
+    def _encode(self, text: str) -> np.ndarray:
+        """Encode un texte en vecteur."""
+        if self.encoder:
+            return self.encoder.encode(text, convert_to_numpy=True)
+        else:
+            # Fallback: vecteur aléatoire (pour tests)
+            return np.random.rand(self.dimension).astype('float32')
 
-    def search(self, query: str, top_k: int = 5) -> List[Dict]:
-        """Search for similar texts."""
-        if not self._faiss_available:
-            # Fallback: return first few docs
-            return [{"content": d, "score": 0.5} for d in self.docs[:top_k]]
+    def add(self, text: str, metadata: Dict[str, Any] | None = None) -> str:
+        """Ajoute un document au store."""
+        doc_id = f"doc_{len(self.documents)}"
 
-        # TODO: Implement FAISS search when available
-        return [{"content": d, "score": 0.5} for d in self.docs[:top_k]]
+        # Génère l'embedding
+        vector = self._encode(text)
 
-    def is_available(self) -> bool:
-        """Check if advanced features are available."""
-        return self._faiss_available
+        # Stocke le document
+        self.documents.append({
+            "id": doc_id,
+            "text": text,
+            "metadata": metadata or {},
+            "vector": vector
+        })
 
-    def has_embeddings(self) -> bool:
-        """Check if sentence-transformers is available for embeddings."""
-        return self._sentence_transformers_available
+        # Ajoute à l'index
+        if self.index:
+            self.index.add(vector.reshape(1, -1))
+        else:
+            self.vectors.append(vector)
+
+        logger.debug(f"Added document {doc_id} to vector store")
+        return doc_id
+
+    def search(self, query: str, top_k: int = 5) -> List[Tuple[Dict[str, Any], float]]:
+        """Recherche les documents les plus similaires."""
+        if not self.documents:
+            return []
+
+        # Encode la query
+        query_vector = self._encode(query)
+
+        if self.index:
+            # Recherche avec FAISS
+            distances, indices = self.index.search(query_vector.reshape(1, -1), min(top_k, len(self.documents)))
+
+            results = []
+            for dist, idx in zip(distances[0], indices[0]):
+                if idx < len(self.documents):
+                    doc = self.documents[idx]
+                    similarity = float(1.0 / (1.0 + dist))  # Convert distance to similarity
+                    results.append((doc, similarity))
+
+            return results
+        else:
+            # Fallback: calcul manuel de similarité cosine
+            results = []
+            for doc in self.documents:
+                doc_vector = doc["vector"]
+                similarity = self._cosine_similarity(query_vector, doc_vector)
+                results.append((doc, float(similarity)))
+
+            results.sort(key=lambda x: x[1], reverse=True)
+            return results[:top_k]
+
+    def _cosine_similarity(self, v1: np.ndarray, v2: np.ndarray) -> float:
+        """Calcule la similarité cosine entre deux vecteurs."""
+        dot = np.dot(v1, v2)
+        norm1 = np.linalg.norm(v1)
+        norm2 = np.linalg.norm(v2)
+
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+
+        return dot / (norm1 * norm2)
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Retourne les statistiques du store."""
+        return {
+            "total_documents": len(self.documents),
+            "dimension": self.dimension,
+            "faiss_available": FAISS_AVAILABLE,
+            "encoder_available": SENTENCE_TRANSFORMERS_AVAILABLE
+        }
+
+    def clear(self) -> None:
+        """Vide le store."""
+        self.documents.clear()
+
+        if self.index:
+            self.index.reset()
+        else:
+            self.vectors.clear()
+
+        logger.info("Vector store cleared")
