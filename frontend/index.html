@@ -9,51 +9,75 @@
 <body>
   <div class="container">
     <header>
-      <h1>🧠 Agent IA Complet</h1>
-      <p class="subtitle">Gemini + MCP + PocketFlow</p>
+      <div class="header-content">
+        <h1>🧠 Agent IA Complet</h1>
+        <p class="subtitle">Gemini + MCP + PocketFlow • Architecture RRLA</p>
+      </div>
+      <div class="header-stats">
+        <span id="status-indicator" class="status-dot"></span>
+        <span id="model-info">Loading...</span>
+      </div>
     </header>
 
     <main class="chat-container">
-      <div id="messages" class="messages"></div>
-      
-      <div class="gitmcp-section">
-        <input 
-          id="gitmcp-url" 
-          type="text" 
-          placeholder="Colle une URL GitHub ou GitMCP... (ex: github.com/user/repo)"
-          autocomplete="off"
-        />
-        <button id="gitmcp-btn" class="btn-secondary">📦 Charger Repo</button>
-        <span id="gitmcp-status" class="gitmcp-status"></span>
+      <div id="messages" class="messages">
+        <div class="welcome-message">
+          <div class="welcome-icon">🚀</div>
+          <h2>Bienvenue !</h2>
+          <p>Je suis un agent IA avec architecture RRLA (Raisonnement, Réflexion, Logique, Action)</p>
+          <div class="capabilities">
+            <span class="capability">💬 Conversation naturelle</span>
+            <span class="capability">🧮 Raisonnement complexe</span>
+            <span class="capability">🔍 Recherche mémoire</span>
+            <span class="capability">📊 Analyse de sentiment</span>
+          </div>
+        </div>
       </div>
-      
+
       <form id="chat-form" class="input-form">
-        <input 
-          id="user-input" 
-          type="text" 
-          placeholder="Pose une question... (Shift+Enter pour streaming)"
+        <input
+          id="user-input"
+          type="text"
+          placeholder="Posez-moi une question... (Shift+Enter pour streaming)"
           autocomplete="off"
           required
         />
-        <button type="submit" class="btn-primary">Envoyer</button>
+        <button type="submit" class="btn-primary">
+          <span class="btn-text">Envoyer</span>
+          <span class="btn-icon">→</span>
+        </button>
       </form>
 
       <div class="controls">
-        <label>
+        <label class="control-label">
           <input type="checkbox" id="stream-mode" />
-          Mode streaming (SSE)
+          <span>Mode streaming (SSE)</span>
         </label>
-        <label>
+        <label class="control-label">
           <input type="checkbox" id="show-trace" />
-          Afficher la trace
+          <span>Afficher la trace</span>
+        </label>
+        <label class="control-label">
+          <input type="checkbox" id="show-confidence" checked />
+          <span>Afficher la confiance</span>
         </label>
       </div>
     </main>
 
     <aside id="debug-panel" class="debug-panel hidden">
-      <h3>🔍 Debug Trace</h3>
-      <pre id="trace-output"></pre>
+      <div class="panel-header">
+        <h3>🔍 Debug Trace</h3>
+        <button id="close-debug" class="btn-close">×</button>
+      </div>
+      <div class="panel-content">
+        <pre id="trace-output"></pre>
+      </div>
     </aside>
+  </div>
+
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loader"></div>
+    <p>Traitement en cours...</p>
   </div>
 
   <script src="/static/app.js"></script>

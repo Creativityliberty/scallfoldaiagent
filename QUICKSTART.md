@@ -1,129 +1,122 @@
-# ⚡ Quick Start - Agent IA + GitMCP
+# 🚀 Quickstart - Agent IA Gemini MCP
 
-Démarrage rapide en 3 minutes.
+Guide de démarrage ultra-rapide pour lancer l'agent IA en 5 minutes !
 
-## 1️⃣ Installation (1 min)
+## ⚡ Installation Express
 
 ```bash
+# 1. Cloner et entrer dans le projet
 cd agent-ia-gemini-mcp
 
-# Créer l'environnement
-uv venv
-source .venv/bin/activate  # ou .venv\Scripts\activate sur Windows
+# 2. Créer l'environnement virtuel
+python -m venv .venv
+source .venv/bin/activate
 
-# Installer les dépendances principales (sans torch)
-uv sync
-
-# OPTIONNEL: Installer les dépendances mémoire (si vous voulez FAISS/torch)
-uv sync --extra memory
+# 3. Installer les dépendances
+pip install -e .
 ```
 
-## 2️⃣ Configuration (1 min)
+## 🔑 Configuration
 
 ```bash
-# Copier le fichier d'env
-cp .env.example .env
+# Créer le fichier .env
+cat > .env << 'EOF'
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash-latest
+HOST=0.0.0.0
+PORT=8000
+DEBUG=true
+VECTOR_STORE_DIM=768
+MAX_CONTEXT_LENGTH=8000
+MCP_SERVER_NAME=agent-ia-mcp
+MCP_VERSION=1.0.0
+EOF
 
-# Éditer .env et ajouter votre clé Gemini
-# GEMINI_API_KEY=AIzaSyD6vHyVe8gyr3SSZXlrN2l68UZWr_GmVqI
+# IMPORTANT: Éditer .env et remplacer your_gemini_api_key_here
+# Obtenir une clé gratuite ici: https://ai.google.dev/
 ```
 
-## 3️⃣ Lancer (1 min)
+## ▶️ Lancer l'application
 
 ```bash
-uv run uvicorn backend.main:app --reload --port 8000
+# Méthode 1: Uvicorn direct
+uvicorn backend.main:app --reload --port 8000
+
+# Méthode 2: Python module
+python -m backend.main
+
+# Méthode 3: Avec hot reload
+uvicorn backend.main:app --reload --log-level info
 ```
 
-Ouvrir [http://localhost:8000](http://localhost:8000) 🎉
+Ouvrir → **http://localhost:8000** 🎉
 
-## 🎯 Utilisation
+## 🧪 Tester l'API
 
-### Charger un repo GitHub
+```bash
+# Health check
+curl http://localhost:8000/health
 
-1. Colle une URL GitHub dans le champ "📦 Charger Repo"
+# MCP tools
+curl http://localhost:8000/api/mcp/tools
+
+# Chat (exemple)
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Bonjour, explique-moi RRLA"}'
+```
+
+## 📦 Avec Docker (optionnel)
+
+```bash
+# Build
+docker build -t agent-ia .
+
+# Run
+docker run -p 8000:8000 --env-file .env agent-ia
+```
+
+## 🐛 Dépannage
+
+### Erreur "GEMINI_API_KEY not found"
+→ Vérifier que le fichier `.env` existe et contient la clé
+
+### Erreur "Module not found"
+→ Vérifier que l'environnement virtuel est activé et les dépendances installées
+
+### Port 8000 déjà utilisé
+→ Changer le port : `uvicorn backend.main:app --port 8001`
+
+## 🎓 Premiers pas
+
+1. **Chat simple**
+   - Ouvrir http://localhost:8000
+   - Taper "Bonjour"
+   - Voir la réponse de l'agent
+
+2. **Mode streaming**
+   - Cocher "Mode streaming (SSE)"
+   - Observer les tokens arriver en temps réel
+
+3. **Debug trace**
+   - Cocher "Afficher la trace"
+   - Voir le détail de l'exécution (nodes, durée, confiance)
+
+4. **Tester MCP**
+   ```bash
+   curl -X POST http://localhost:8000/api/mcp/call \
+     -H "Content-Type: application/json" \
+     -d '{"tool": "calculate", "arguments": {"expression": "2 + 2"}}'
    ```
-   github.com/username/repo
-   ```
 
-2. Clique sur le bouton ou appuie sur Entrée
+## 📚 Documentation complète
 
-3. Attends le statut ✅
+Voir [README.md](README.md) pour la documentation complète
 
-### Poser une question
+## 💬 Besoin d'aide ?
 
-1. Écris ta question dans le champ de chat
+Ouvrir une issue : https://github.com/votre-repo/issues
 
-2. Clique "Envoyer" ou appuie sur Entrée
+---
 
-3. Le contexte repo est automatiquement injecté
-
-### Mode Streaming
-
-Coche "Mode streaming (SSE)" pour voir les réponses token par token.
-
-### Voir la trace
-
-Coche "Afficher la trace" pour voir les timings de chaque node.
-
-## 📋 Commandes utiles
-
-```bash
-# Tests
-uv run pytest tests/ -v
-
-# Linter
-uv run ruff check backend/
-
-# Type checking
-uv run mypy backend/
-
-# Voir les logs
-DEBUG=true uv run uvicorn backend.main:app --reload
-```
-
-## 🔗 Endpoints
-
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| `/` | GET | Interface web |
-| `/api/chat` | POST | Chat REST |
-| `/api/stream` | GET | Chat SSE (streaming) |
-| `/api/gitmcp/fetch` | POST | Charger repo GitHub |
-| `/api/mcp/tools` | GET | Lister outils MCP |
-| `/api/mcp/call` | POST | Appeler outil MCP |
-| `/health` | GET | Health check |
-
-## 📚 Documentation
-
-- [README.md](./README.md) - Architecture complète
-- [GITMCP_INTEGRATION.md](./GITMCP_INTEGRATION.md) - Détails GitMCP
-- [backend/](./backend/) - Code source
-
-## 🐛 Troubleshooting
-
-**Erreur: "GEMINI_API_KEY not found"**
-→ Vérifier que `.env` contient votre clé API
-
-**Erreur: "Port 8000 already in use"**
-→ Utiliser un autre port: `--port 8001`
-
-**Erreur: "Module not found"**
-→ Relancer `uv sync`
-
-**Erreur: "torch not available"**
-→ Les fonctionnalités mémoire utilisent des fallbacks simples
-
-**GitMCP: "Repo not found"**
-→ Vérifier que l'URL est correcte et le repo public
-
-## 🚀 Prochaines étapes
-
-1. Charger un repo GitHub
-2. Poser une question sur le code
-3. Voir l'agent analyser le contexte
-4. Ajouter des outils MCP personnalisés
-5. Intégrer avec d'autres services
-
-Bon coding! 🎉
-
-Bon coding! 🎉
+**Happy coding! 🚀**
