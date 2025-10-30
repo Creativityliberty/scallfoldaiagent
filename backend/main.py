@@ -175,7 +175,13 @@ async def mcp_call(req: Request):
         return JSONResponse(result)
 
     except ValueError as e:
-        raise HTTPException(404, str(e))
+        # Only expose "Unknown tool" errors, sanitize others
+        error_msg = str(e)
+        if "Unknown tool" in error_msg:
+            raise HTTPException(404, "Tool not found")
+        else:
+            logger.error(f"MCP validation error: {e}")
+            raise HTTPException(400, "Invalid request")
     except Exception as e:
         logger.error(f"MCP call error: {e}")
         # Don't expose internal error details to external users
