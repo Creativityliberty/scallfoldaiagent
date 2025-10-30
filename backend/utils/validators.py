@@ -115,8 +115,8 @@ def sanitize_html(text: str) -> str:
     # Remove HTML tags
     text = re.sub(r'<[^>]+>', '', text)
 
-    # Remove JavaScript
-    text = re.sub(r'<script.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    # Remove JavaScript - improved regex to handle spaces before closing bracket
+    text = re.sub(r'<script\b[^>]*>.*?</script\s*>', '', text, flags=re.DOTALL | re.IGNORECASE)
 
     # Remove inline JavaScript
     text = re.sub(r'on\w+\s*=\s*["\'].*?["\']', '', text, flags=re.IGNORECASE)

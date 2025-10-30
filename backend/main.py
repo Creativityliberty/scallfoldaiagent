@@ -173,7 +173,8 @@ async def mcp_call(req: Request):
         raise HTTPException(404, str(e))
     except Exception as e:
         logger.error(f"MCP call error: {e}")
-        raise HTTPException(500, f"Tool execution error: {str(e)}")
+        # Don't expose internal error details to external users
+        raise HTTPException(500, "Tool execution error")
 
 @app.get("/api/pipeline/info")
 def pipeline_info():
