@@ -1,0 +1,88 @@
+{
+  "status": "success",
+  "leads": [
+    {
+      "id": "lead_1",
+      "name": "Business 1",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8
+    },
+    {
+      "id": "lead_2",
+      "name": "Business 2",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.81
+    },
+    {
+      "id": "lead_3",
+      "name": "Business 3",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8200000000000001
+    },
+    {
+      "id": "lead_4",
+      "name": "Business 4",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8300000000000001
+    },
+    {
+      "id": "lead_5",
+      "name": "Business 5",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8400000000000001
+    },
+    {
+      "id": "lead_6",
+      "name": "Business 6",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8500000000000001
+    },
+    {
+      "id": "lead_7",
+      "name": "Business 7",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8600000000000001
+    },
+    {
+      "id": "lead_8",
+      "name": "Business 8",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.8700000000000001
+    },
+    {
+      "id": "lead_9",
+      "name": "Business 9",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.88
+    },
+    {
+      "id": "lead_10",
+      "name": "Business 10",
+      "location": "Seattle, WA",
+      "query": "coffee shops",
+      "status": "new",
+      "score": 0.89
+    }
+  ],
+  "count": 10,
+  "query": "coffee shops",
+  "location": "Seattle, WA"
+}
